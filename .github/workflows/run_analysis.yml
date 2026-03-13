@@ -33,12 +33,11 @@ jobs:
 
     - name: 4. 執行模型分析
       env:
-        # 從 GitHub Secrets 讀取你的 API Key，保護隱私
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-        # 接收來自本地或網頁輸入的代碼
         STOCK_SYMBOL: ${{ github.event.client_payload.stock || github.event.inputs.stock_symbol }}
+        # 增加這行，告訴 Python 你的代碼根目錄在哪
+        PYTHONPATH: ${{ github.workspace }}
       run: |
-        # 執行你的主程式，傳入股票代碼
         python main.py --stock $STOCK_SYMBOL
 
     - name: 5. 儲存分析結果報告
