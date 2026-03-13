@@ -25,11 +25,11 @@ jobs:
       with:
         python-version: '3.10' # 使用你最穩定的 3.10 版本
 
-    - name: 3. 安裝必要組件 (包含 Torch 和 yfinance)
+    - name: 3. 安裝必要組件
       run: |
         python -m pip install --upgrade pip
-        pip install yfinance pandas scikit-learn torch google-generativeai
-        # 如果你有 requirements.txt，也可以用 pip install -r requirements.txt
+        # 加上 python-dotenv 解決你的報錯
+        pip install yfinance pandas scikit-learn torch google-generativeai python-dotenv
 
     - name: 4. 執行模型分析
       env:
