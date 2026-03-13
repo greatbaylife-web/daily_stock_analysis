@@ -25,12 +25,11 @@ jobs:
       with:
         python-version: '3.10' # 使用你最穩定的 3.10 版本
 
-    - name: 3. 安裝必要組件
+    - name: 3. 安裝所有依賴組件
       run: |
         python -m pip install --upgrade pip
-        # 補上 tenacity 和其他量化分析必備庫
-        pip install yfinance pandas scikit-learn torch google-generativeai \
-                    python-dotenv tenacity requests numpy
+        # 只要這一行，就能搞定所有 ModuleNotFoundError
+        pip install -r requirements.txt
 
     - name: 4. 執行模型分析
       env:
