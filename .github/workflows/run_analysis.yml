@@ -1,0 +1,55 @@
+name: Remote AI Stock Analysis
+
+on:
+  # 允許你從本地 local_app.py 遠程觸發
+  repository_dispatch:
+    types: [start_analysis]
+  # 也允許你在 GitHub 網頁上手動點擊執行
+  workflow_dispatch:
+    inputs:
+      stock_symbol:
+        description: '輸入股票代碼 (e.g., NVDA)'
+        required: true
+        default: 'NVDA'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest # 使用 GitHub 提供的 Linux 伺服器運算
+
+    steps:
+    - name: 1. 檢出代碼
+      uses: actions/checkout@v4
+
+    - name: 2. 設置 Python 環境
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10' # 使用你最穩定的 3.10 版本
+
+    - name: 3. 安裝必要組件 (包含 Torch 和 yfinance)
+      run: |
+        python -m pip install --upgrade pip
+        pip install yfinance pandas scikit-learn torch google-generativeai
+        # 如果你有 requirements.txt，也可以用 pip install -r requirements.txt
+
+    - name: 4. 執行模型分析
+      env:
+        # 從 GitHub Secrets 讀取你的 API Key，保護隱私
+        GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        # 接收來自本地或網頁輸入的代碼
+        STOCK_SYMBOL: ${{ github.event.client_payload.stock || github.event.inputs.stock_symbol }}
+      run: |
+        # 執行你的主程式，傳入股票代碼
+        python main.py --stock $STOCK_SYMBOL
+
+    - name: 5. 儲存分析結果報告
+      uses: actions/upload-artifact@v4
+      with:
+        name: analysis-report-${{ github.event.inputs.stock_symbol || 'remote' }}
+        path: "*.md" # 儲存所有產出的 Markdown 報告
+
+    - name: 6. 自動推送到 GitHub Pages (選用)
+      if: success()
+      run: |
+        git config --global user.name "GitHub Action"
+        git config --global user.email "action@github.com"
+        # 這裡可以加入將結果 push 到 gh-pages 分支的指令
