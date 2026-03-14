@@ -46,9 +46,18 @@ jobs:
         name: analysis-report-${{ github.event.inputs.stock_symbol || 'remote' }}
         path: "*.md" # 儲存所有產出的 Markdown 報告
 
-    - name: 6. 自動推送到 GitHub Pages (選用)
+    - name: 6. 將分析報告推送到 GitHub Pages
       if: success()
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
-        # 這裡可以加入將結果 push 到 gh-pages 分支的指令
+        
+        # 建立一個臨時資料夾放網頁
+        mkdir -p public
+        # 將最新的 Markdown 報告複製並改名為 index.md，讓 GitHub Pages 能識別
+        cp reports/report_$(date +'%Y%m%d').md index.md
+        
+        # 強制推送到一個名為 gh-pages 的分支
+        git add index.md
+        git commit -m "自動更新個股分析報告: $(date +'%Y-%m-%d')"
+        git push -f origin main:gh-pages
