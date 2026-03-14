@@ -40,11 +40,12 @@ jobs:
       run: |
         python main.py --stock $STOCK_SYMBOL
 
-    - name: 5. 儲存分析結果報告
+    - name: 5. 儲存分析結果報告 (Artifact)
       uses: actions/upload-artifact@v4
       with:
-        name: analysis-report-${{ github.event.inputs.stock_symbol || 'remote' }}
-        path: "*.md" # 儲存所有產出的 Markdown 報告
+        name: Stock-AI-Report-${{ github.event.inputs.stock_symbol || 'Daily' }}
+        # 修正這裡：明確指定只抓 reports 資料夾下的 md 檔案
+        path: reports/*.md 
 
     - name: 6. 將分析報告推送到 GitHub Pages
       if: success()
@@ -52,25 +53,20 @@ jobs:
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
         
-        # 1. 確保拿到最新的程式碼
-        git fetch origin main
+        # 確保我們能看到 reports 資料夾的內容
+        ls -l reports/
         
-        # 2. 找到最新的報告檔案 (無視日期，直接抓最新的 .md)
+        # 找到最新的報告檔案 ( reports/report_2026xxxx.md )
         LATEST_REPORT=$(ls -t reports/report_*.md | head -1)
-        echo "發現最新報告: $LATEST_REPORT"
+        echo "準備發布的報告路徑: $LATEST_REPORT"
         
-        # 3. 將報告內容複製為 index.md (這是網頁首頁)
+        # 將該報告內容複製為 index.md (網頁首頁)
         cp "$LATEST_REPORT" index.md
         
-        # 4. 強制推送到 gh-pages 分支
-        # 注意：使用 --force 確保網頁內容即時更新
+        # 強制推送到 gh-pages 分支
         git add index.md
-        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')"
+        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')" || echo "無變更"
         git push -f origin HEAD:gh-pages
-        cp reports/report_$(date +'%Y%m%d').md index.md
-        
-        # 強制推送到一個名為 gh-pages 的分支
-        git add index.md
         # 加上 || true 確保沒有變更時不會報錯
         git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')" || true
         git push -f origin HEAD:gh-pages
