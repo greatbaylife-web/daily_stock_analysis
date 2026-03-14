@@ -47,26 +47,32 @@ jobs:
         # 修正這裡：明確指定只抓 reports 資料夾下的 md 檔案
         path: reports/*.md 
 
-    - name: 6. 將分析報告推送到 GitHub Pages
+    - name: 6. 將分析報告推送到 GitHub Pages (視覺化修正)
       if: success()
       run: |
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
         
-        # 確保我們能看到 reports 資料夾的內容
-        ls -l reports/
-        
-        # 找到最新的報告檔案 ( reports/report_2026xxxx.md )
+        # 1. 抓取最新報告
         LATEST_REPORT=$(ls -t reports/report_*.md | head -1)
-        echo "準備發布的報告路徑: $LATEST_REPORT"
+        echo "正在處理報告: $LATEST_REPORT"
         
-        # 將該報告內容複製為 index.md (網頁首頁)
-        cp "$LATEST_REPORT" index.md
+        # 2. 建立一個乾淨的臨時目錄
+        mkdir -p deploy
         
-        # 強制推送到 gh-pages 分支
-        git add index.md
-        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')" || echo "無變更"
-        git push -f origin HEAD:gh-pages
-        # 加上 || true 確保沒有變更時不會報錯
-        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')" || true
-        git push -f origin HEAD:gh-pages
+        # 3. 關鍵：將內容複製為 index.md 並加入 Jekyll 設定（確保 GitHub 正確渲染）
+        echo "---" > deploy/index.md
+        echo "layout: default" >> deploy/index.md
+        echo "title: AI 股票分析日報" >> deploy/index.md
+        echo "---" >> deploy/index.md
+        cat "$LATEST_REPORT" >> deploy/index.md
+        
+        # 4. 加入一個空白的 .nojekyll 文件，防止 GitHub 過濾資料夾
+        touch deploy/.nojekyll
+        
+        # 5. 強制推送到 gh-pages 分支
+        cd deploy
+        git init
+        git add .
+        git commit -m "🚀 網頁版報告更新: $(date +'%Y-%m-%d %H:%M')"
+        git push -f https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:gh-pages
