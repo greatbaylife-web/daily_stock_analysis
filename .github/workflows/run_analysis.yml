@@ -71,5 +71,6 @@ jobs:
         
         # 強制推送到一個名為 gh-pages 的分支
         git add index.md
-        git commit -m "自動更新個股分析報告: $(date +'%Y-%m-%d')"
-        git push -f origin main:gh-pages
+        # 加上 || true 確保沒有變更時不會報錯
+        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')" || true
+        git push -f origin HEAD:gh-pages
