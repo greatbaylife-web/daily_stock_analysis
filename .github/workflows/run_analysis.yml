@@ -52,9 +52,21 @@ jobs:
         git config --global user.name "GitHub Action"
         git config --global user.email "action@github.com"
         
-        # 建立一個臨時資料夾放網頁
-        mkdir -p public
-        # 將最新的 Markdown 報告複製並改名為 index.md，讓 GitHub Pages 能識別
+        # 1. 確保拿到最新的程式碼
+        git fetch origin main
+        
+        # 2. 找到最新的報告檔案 (無視日期，直接抓最新的 .md)
+        LATEST_REPORT=$(ls -t reports/report_*.md | head -1)
+        echo "發現最新報告: $LATEST_REPORT"
+        
+        # 3. 將報告內容複製為 index.md (這是網頁首頁)
+        cp "$LATEST_REPORT" index.md
+        
+        # 4. 強制推送到 gh-pages 分支
+        # 注意：使用 --force 確保網頁內容即時更新
+        git add index.md
+        git commit -m "🚀 自動更新個股分析: $(date +'%Y-%m-%d %H:%M')"
+        git push -f origin HEAD:gh-pages
         cp reports/report_$(date +'%Y%m%d').md index.md
         
         # 強制推送到一個名為 gh-pages 的分支
